@@ -6,7 +6,7 @@ sudo yum check-update && sudo yum update -y
 sudo yum install -y htop jq sqlite-devel openssl-devel zsh git
 sudo yum groupinstall -y "Development Tools"
 sudo amazon-linux-extras install postgresql14
-sudo yum install postgresql-devel -y
+sudo yum install -y openssl-devel libpq-devel
 
 # increase inotify watches
 if [ ! -f /etc/sysctl.d/10-inotify.conf ]; then
@@ -67,9 +67,9 @@ ZSH=\$HOME/.oh-my-zsh
 ZSH_THEME="robbyrussell"
 DISABLE_AUTO_UPDATE=false
 
-zstyle ":completion:*:git-checkout:*" sort false                                                                                                   
-zstyle ':completion:*:descriptions' format '[%d]'                                                                                                  
-zstyle ':completion:*' list-colors \${(s.:.)LS_COLORS}                                                                                              
+zstyle ":completion:*:git-checkout:*" sort false
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' list-colors \${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1 --color=always \$realpath'
 
 plugins=(common-aliases git git-extras gitignore rake docker copybuffer copypath copyfile zsh-syntax-highlighting zsh-autosuggestions)
@@ -106,7 +106,7 @@ sudo yum install -y \
 	ncurses-devel \
 	libffi-devel \
 	readline-devel \
-	openssl11-devel \
+	openssl11-libs \
 	tk-devel \
 	xz-devel
 
@@ -116,8 +116,8 @@ if [ -d "$pyenv_install_path" ]; then
 else
   git clone $pyenv_repo $pyenv_install_path -b $pyenv_version
   git clone https://github.com/pyenv/pyenv-virtualenv.git $pyenv_install_path/plugins/pyenv-virtualenv
-  
-  cat << EOF > ~/.pyenv/pyenv.bash 
+
+  cat << EOF > ~/.pyenv/pyenv.bash
 if [ -d "\$HOME/.pyenv" ]; then
   export PATH=\$HOME/.pyenv/bin:\$PATH;
   export PYENV_ROOT=\$HOME/.pyenv;
@@ -128,7 +128,7 @@ if [ -d "\$HOME/.pyenv" ]; then
 fi
 EOF
 
-  cat << EOF > ~/.pyenv/pyenv.zsh 
+  cat << EOF > ~/.pyenv/pyenv.zsh
 if [ -d "\$HOME/.pyenv" ]; then
   export PATH=\$HOME/.pyenv/bin:\$PATH;
   export PYENV_ROOT=\$HOME/.pyenv;
