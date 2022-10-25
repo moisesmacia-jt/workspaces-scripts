@@ -3,10 +3,10 @@
 echo -e "\n\nInstalling common packages ...\n\n"
 
 sudo yum check-update && sudo yum update -y
-sudo yum install -y htop jq sqlite-devel openssl-devel zsh git
+sudo yum install -y htop jq sqlite-devel zsh git
 sudo yum groupinstall -y "Development Tools"
 sudo amazon-linux-extras install postgresql14
-sudo yum install -y openssl-devel libpq-devel
+sudo yum install -y libpq-devel
 
 # increase inotify watches
 if [ ! -f /etc/sysctl.d/10-inotify.conf ]; then
@@ -106,7 +106,7 @@ sudo yum install -y \
 	ncurses-devel \
 	libffi-devel \
 	readline-devel \
-	openssl11-libs \
+	openssl11-devel \
 	tk-devel \
 	xz-devel
 
