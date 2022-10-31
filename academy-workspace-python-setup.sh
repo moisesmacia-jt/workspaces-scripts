@@ -142,3 +142,9 @@ EOF
   echo "source ~/.pyenv/pyenv.bash" >> ~/.bashrc
   source ~/.pyenv/pyenv.bash
 fi
+
+
+# Install DBeaver
+
+wget https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm -O /tmp
+sudo yum install -y /tmp/dbeaver-ce-latest-stable.x86_64.rpm

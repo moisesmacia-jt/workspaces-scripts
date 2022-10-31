@@ -146,7 +146,13 @@ EOF
 
   echo "source ~/.rbenv/rbenv.bash" >> ~/.bashrc
   source ~/.rbenv/rbenv.bash
- 
+
   echo -e "\n\n  > Installing ruby 3.1.2 (This could take ~15m)\n\n"
   rbenv install 3.1.2 && rbenv global 3.1.2
 fi
+
+
+# Install DBeaver
+
+wget https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm -O /tmp
+sudo yum install -y /tmp/dbeaver-ce-latest-stable.x86_64.rpm
