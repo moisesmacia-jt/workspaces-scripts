@@ -154,5 +154,5 @@ fi
 
 # Install DBeaver
 
-wget https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm -O /tmp
+wget -L https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm -o /tmp/dbeaver-ce-latest-stable.x86_64.rpm
 sudo yum install -y /tmp/dbeaver-ce-latest-stable.x86_64.rpm
