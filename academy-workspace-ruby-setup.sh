@@ -1,12 +1,15 @@
 #!/bin/env sh
 
-echo -e "\n\nInstalling common packages ...\n\n"
+echo "\n\nInstalling common packages ...\n\n"
 
-sudo yum check-update && sudo yum update -y
-sudo yum install -y htop jq sqlite-devel openssl-devel zsh git
-sudo yum groupinstall -y "Development Tools"
-sudo amazon-linux-extras install postgresql14
-sudo yum install postgresql-devel -y
+sudo apt update && sudo apt dist-upgrade -y && sudo apt autoremove -y
+sudo apt install aptitude && sudo aptitude dist-upgrade -y
+sudo aptitude install htop jq aptitude ca-certificates curl gnupg lsb-release \
+	      sqlite3 sqlite3-tools sqlitebrowser libsqlite3-dev \
+	      libssl-dev zsh git build-essential libpq-dev zlib1g-dev libyaml-dev \
+	      language-pack-gnome-es language-pack-es chromium-browser wget -y
+
+sudo snap install dbeaver-ce
 
 # increase inotify watches
 if [ ! -f /etc/sysctl.d/10-inotify.conf ]; then
@@ -14,45 +17,42 @@ if [ ! -f /etc/sysctl.d/10-inotify.conf ]; then
   sudo sysctl -p
 fi
 
-#echo -e "\n\nInstalling SQlite 3.8...\n\n"
-#
-#if [ ! -d /opt/atomic ]; then
-#  curl http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/atomic-sqlite-sqlite-3.8.5-3.el7.art.x86_64.rpm --output /tmp/atomic-sqlite-sqlite-3.8.5-3.el7.art.x86_64.rpm
-#  curl http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/atomic-sqlite-sqlite-devel-3.8.5-3.el7.art.x86_64.rpm --output /tmp/atomic-sqlite-sqlite-devel-3.8.5-3.el7.art.x86_64.rpm
-#
-#  sudo yum install -y /tmp/atomic-sqlite-*.rpm
-#  sudo mv /lib64/libsqlite3.so.0.8.6{,-3.17}
-#  sudo cp /opt/atomic/atomic-sqlite/root/usr/lib64/libsqlite3.so.0.8.6 /lib64
-#fi
+echo "\n\nInstalling Docker ...\n\n"
 
+if [ ! -f "/usr/share/keyrings/docker-archive-keyring.gpg" ]; then
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+fi
 
-echo -e "\n\nInstalling Google Chrome ...\n\n"
-curl https://intoli.com/install-google-chrome.sh | sudo bash
+if [ ! -f "/etc/apt/sources.list.d/docker.list" ]; then
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+fi
 
-
-echo -e "\n\nInstalling docker ...\n\n"
-
-aws_user=$(whoami)
-sudo yum install -y docker
-sudo systemctl enable docker
-sudo systemctl start docker
-sudo usermod -a -G docker $aws_user
-
-sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
+sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo sh -c "echo '{\"dns\": [\"8.8.8.8\", \"8.8.4.4\"]}' > /etc/docker/daemon.json"
 
 
-echo -e "\n\nInstalling VSCode ...\n\n"
-
-sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
-sudo yum check-update
-sudo yum install code -y
+# add current user to docker
+aws_user=$(whoami)
+sudo usermod -aG docker $aws_user
 
 
-echo -e "\n\nInstalling Zsh...\n\n"
+echo "\n\nInstalling Visual Studio Code ...\n\n"
+
+if [ ! -f /etc/apt/keyrings/packages.microsoft.gpg ]; then
+  wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+  sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+fi
+
+if [ ! -f /etc/apt/sources.list.d/vscode.list ]; then
+  sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+fi
+
+sudo aptitude update; sudo aptitude install code -y
+
+
+echo "\n\nInstalling Zsh ...\n\n"
 
 ohmyzsh_repo='https://github.com/robbyrussell/oh-my-zsh.git'
 ohmyzsh_install_path=${HOME}/.oh-my-zsh
@@ -78,9 +78,9 @@ ZSH=\$HOME/.oh-my-zsh
 ZSH_THEME="robbyrussell"
 DISABLE_AUTO_UPDATE=false
 
-zstyle ":completion:*:git-checkout:*" sort false                                                                                                   
-zstyle ':completion:*:descriptions' format '[%d]'                                                                                                  
-zstyle ':completion:*' list-colors \${(s.:.)LS_COLORS}                                                                                              
+zstyle ":completion:*:git-checkout:*" sort false
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' list-colors \${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1 --color=always \$realpath'
 
 plugins=(common-aliases git git-extras gitignore rake docker copybuffer copypath copyfile zsh-syntax-highlighting zsh-autosuggestions)
@@ -98,18 +98,21 @@ if [ -f "\$HOME/.rbenv/rbenv.zsh" ]; then
 fi
 EOF
 
-echo -e "\n\nInstalling Yarn ...\n\n"
+
+echo "\n\nInstalling Yarn ...\n\n"
 
 curl -sL https://rpm.nodesource.com/setup_16.x | sudo -E bash -
-sudo yum install -y nodejs
+sudo aptitude install -y nodejs
 sudo curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
-sudo yum install yarn -y
+sudo aptitude install yarn -y
 
-echo -e "\n\nInstalling RBenv ...\n\n"
+
+echo "\n\nInstalling RBenv ...\n\n"
+
 rbenv_version=v1.2.0
 rbenv_repo=https://github.com/rbenv/rbenv.git
 rbenv_install_path=$HOME/.rbenv
-rbenv_build_version=v20220610
+rbenv_build_version=v20221225
 
 if [ -d "$rbenv_install_path" ]; then
   rbenv update
@@ -123,11 +126,11 @@ else
   cd ${rbenv_install_path}/plugins && git clone https://github.com/rbenv/ruby-build.git -b $rbenv_build_version
   # rbenv-default-gems
   cd ${rbenv_install_path}/plugins && git clone https://github.com/rbenv/rbenv-default-gems.git
-  echo -e "bundler\nrake\nsolargraph\nforeman" > ${rbenv_install_path}/default-gems
+  echo "bundler\nrake\nsolargraph\nforeman" > ${rbenv_install_path}/default-gems
   # rbenv-update
   cd ${rbenv_install_path}/plugins && git clone https://github.com/rkh/rbenv-update.git
-  
-  cat << EOF > ~/.rbenv/rbenv.bash 
+
+  cat << EOF > ~/.rbenv/rbenv.bash
 if [ -d "\$HOME/.rbenv" ]; then
   export PATH=\$HOME/.rbenv/bin:\$PATH;
   export RBENV_ROOT=\$HOME/.rbenv;
@@ -135,7 +138,7 @@ if [ -d "\$HOME/.rbenv" ]; then
 fi
 EOF
 
-  cat << EOF > ~/.rbenv/rbenv.zsh 
+  cat << EOF > ~/.rbenv/rbenv.zsh
 if [ -d "\$HOME/.rbenv" ]; then
   export PATH=\$HOME/.rbenv/bin:\$PATH;
   export RBENV_ROOT=\$HOME/.rbenv;
@@ -145,14 +148,4 @@ fi
 EOF
 
   echo "source ~/.rbenv/rbenv.bash" >> ~/.bashrc
-  source ~/.rbenv/rbenv.bash
-
-  echo -e "\n\n  > Installing ruby 3.1.2 (This could take ~15m)\n\n"
-  rbenv install 3.1.2 && rbenv global 3.1.2
 fi
-
-
-# Install DBeaver
-
-wget -L https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm -o /tmp/dbeaver-ce-latest-stable.x86_64.rpm
-sudo yum install -y /tmp/dbeaver-ce-latest-stable.x86_64.rpm
