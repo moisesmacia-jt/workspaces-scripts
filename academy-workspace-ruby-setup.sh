@@ -1,13 +1,22 @@
 #!/bin/env sh
 
-echo "\n\nInstalling common packages ...\n\n"
+echo -e "\n\nInstalling common packages ...\n\n"
 
-sudo apt update && sudo apt dist-upgrade -y && sudo apt autoremove -y
+export NEEDRESTART_MODE=a
+export DEBIAN_FRONTEND=noninteractive
+
+sudo apt update
+yes | apt-get full-upgrade \
+  -o Dpkg::Options::=--force-confnew \
+  -o Dpkg::Options::=--force-confdef \
+  -y -q --allow-downgrades --allow-remove-essential --allow-change-held-packages
+sudo apt autoremove -y
 sudo apt install aptitude && sudo aptitude dist-upgrade -y
-sudo aptitude install htop jq aptitude ca-certificates curl gnupg lsb-release \
-	      sqlite3 sqlite3-tools sqlitebrowser libsqlite3-dev \
-	      libssl-dev zsh git build-essential libpq-dev zlib1g-dev libyaml-dev \
-	      language-pack-gnome-es language-pack-es chromium-browser wget -y
+sudo aptitude install -o Dpkg::Options::="--force-confnew" -y \
+        htop jq aptitude ca-certificates curl gnupg lsb-release \
+        sqlite3 sqlite3-tools sqlitebrowser libsqlite3-dev \
+        libssl-dev zsh git build-essential libpq-dev zlib1g-dev libyaml-dev \
+        language-pack-gnome-es language-pack-es chromium-browser wget
 
 sudo snap install dbeaver-ce
 
@@ -17,7 +26,7 @@ if [ ! -f /etc/sysctl.d/10-inotify.conf ]; then
   sudo sysctl -p
 fi
 
-echo "\n\nInstalling Docker ...\n\n"
+echo -e "\n\nInstalling Docker ...\n\n"
 
 if [ ! -f "/usr/share/keyrings/docker-archive-keyring.gpg" ]; then
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -38,7 +47,7 @@ aws_user=$(whoami)
 sudo usermod -aG docker $aws_user
 
 
-echo "\n\nInstalling Visual Studio Code ...\n\n"
+echo -e "\n\nInstalling Visual Studio Code ...\n\n"
 
 if [ ! -f /etc/apt/keyrings/packages.microsoft.gpg ]; then
   wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
@@ -52,7 +61,7 @@ fi
 sudo aptitude update; sudo aptitude install code -y
 
 
-echo "\n\nInstalling Zsh ...\n\n"
+echo -e "\n\nInstalling Zsh ...\n\n"
 
 ohmyzsh_repo='https://github.com/robbyrussell/oh-my-zsh.git'
 ohmyzsh_install_path=${HOME}/.oh-my-zsh
@@ -99,15 +108,21 @@ fi
 EOF
 
 
-echo "\n\nInstalling Yarn ...\n\n"
+echo -e "\n\nInstalling Yarn ...\n\n"
 
 curl -sL https://rpm.nodesource.com/setup_16.x | sudo -E bash -
 sudo aptitude install -y nodejs
-sudo curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+
+if [ ! -f /etc/apt/sources.list.d/yarn.list ]; then
+  sudo sh -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list'
+  sudo aptitude update
+fi
+
 sudo aptitude install yarn -y
 
 
-echo "\n\nInstalling RBenv ...\n\n"
+echo -e "\n\nInstalling RBenv ...\n\n"
 
 rbenv_version=v1.2.0
 rbenv_repo=https://github.com/rbenv/rbenv.git
@@ -126,7 +141,7 @@ else
   cd ${rbenv_install_path}/plugins && git clone https://github.com/rbenv/ruby-build.git -b $rbenv_build_version
   # rbenv-default-gems
   cd ${rbenv_install_path}/plugins && git clone https://github.com/rbenv/rbenv-default-gems.git
-  echo "bundler\nrake\nsolargraph\nforeman" > ${rbenv_install_path}/default-gems
+  echo -e "bundler\nrake\nsolargraph\nforeman" > ${rbenv_install_path}/default-gems
   # rbenv-update
   cd ${rbenv_install_path}/plugins && git clone https://github.com/rkh/rbenv-update.git
 
